@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\protected_pages\EventSubscriber\ProtectedPagesSubscriber.
- */
-
 namespace Drupal\protected_pages\EventSubscriber;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -31,39 +26,24 @@ class ProtectedPagesSubscriber implements EventSubscriberInterface {
       return;
     }
     $current_path = \Drupal::service('path.alias_manager')
-        ->getAliasByPath(\Drupal::service('path.current')->getPath());
+      ->getAliasByPath(\Drupal::service('path.current')->getPath());
     $normal_path = Unicode::strtolower(\Drupal::service('path.alias_manager')
-                ->getPathByAlias($current_path));
+      ->getPathByAlias($current_path));
     $pid = $this->protectedPagesIsPageLocked($current_path, $normal_path);
+    $this->sendAccessDenied($pid);
 
-    if ($pid) {
-      $query = \Drupal::destination()->getAsArray();
-      $query['protected_page'] = $pid;
-      $response = new RedirectResponse(Url::fromUri('internal:/protected-page', array('query' => $query))
-              ->toString());
-      $response->send();
-      return;
-    }
-    else {
+    if (empty($pid)) {
       $page_node = \Drupal::request()->attributes->get('node');
       if (is_object($page_node)) {
         $nid = $page_node->id();
         if (isset($nid) && is_numeric($nid)) {
           $path_to_node = '/node/' . $nid;
           $current_path = Unicode::strtolower(\Drupal::service('path.alias_manager')
-                      ->getAliasByPath($path_to_node));
+            ->getAliasByPath($path_to_node));
           $normal_path = Unicode::strtolower(\Drupal::service('path.alias_manager')
-                      ->getPathByAlias($current_path));
+            ->getPathByAlias($current_path));
           $pid = $this->protectedPagesIsPageLocked($current_path, $normal_path);
-          if ($pid) {
-            $query = \Drupal::destination()->getAsArray();
-            $query['protected_page'] = $pid;
-
-            $response = new RedirectResponse(Url::fromUri('internal:/protected-page', array('query' => $query))
-                    ->toString());
-            $response->send();
-            return;
-          }
+          $this->sendAccessDenied($pid);
         }
       }
     }
@@ -78,6 +58,25 @@ class ProtectedPagesSubscriber implements EventSubscriberInterface {
   }
 
   /**
+   * Send Access Denied for pid.
+   *
+   * @param int $pid
+   *   The Protected Page ID.
+   */
+  public function sendAccessDenied($pid) {
+    if (empty($pid)) {
+      return;
+    }
+
+    $query = \Drupal::destination()->getAsArray();
+    $query['protected_page'] = $pid;
+    \Drupal::service('page_cache_kill_switch')->trigger();
+    $response = new RedirectResponse(Url::fromUri('internal:/protected-page', array('query' => $query))
+      ->toString());
+    $response->send();
+  }
+
+  /**
    * Returns protected page id.
    *
    * @param string $current_path
@@ -85,7 +84,7 @@ class ProtectedPagesSubscriber implements EventSubscriberInterface {
    * @param string $normal_path
    *   Current normal path.
    *
-   * @return int $pid
+   * @return int
    *   The protected page id.
    */
   public function protectedPagesIsPageLocked($current_path, $normal_path) {
