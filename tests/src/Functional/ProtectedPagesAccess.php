@@ -49,10 +49,10 @@ class ProtectedPagesAccess extends BrowserTestBase {
     $this->assertTrue(Node::load($node->id()), 'Node created.');
 
     // Protect created node.
-    $page_data = array(
+    $page_data = [
       'password' => 'test_pass',
       'path' => '/node/' . $node->id(),
-    );
+    ];
     $storage = \Drupal::service('protected_pages.storage');
     $storage->insertProtectedPage($page_data);
 

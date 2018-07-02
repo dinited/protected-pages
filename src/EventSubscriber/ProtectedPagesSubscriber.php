@@ -53,7 +53,7 @@ class ProtectedPagesSubscriber implements EventSubscriberInterface {
    * {@inheritdoc}
    */
   public static function getSubscribedEvents() {
-    $events[KernelEvents::RESPONSE][] = array('checkProtectedPage');
+    $events[KernelEvents::RESPONSE][] = ['checkProtectedPage'];
     return $events;
   }
 
@@ -71,7 +71,7 @@ class ProtectedPagesSubscriber implements EventSubscriberInterface {
     $query = \Drupal::destination()->getAsArray();
     $query['protected_page'] = $pid;
     \Drupal::service('page_cache_kill_switch')->trigger();
-    $response = new RedirectResponse(Url::fromUri('internal:/protected-page', array('query' => $query))
+    $response = new RedirectResponse(Url::fromUri('internal:/protected-page', ['query' => $query])
       ->toString());
     $response->send();
   }
@@ -88,18 +88,18 @@ class ProtectedPagesSubscriber implements EventSubscriberInterface {
    *   The protected page id.
    */
   public function protectedPagesIsPageLocked($current_path, $normal_path) {
-    $fields = array('pid');
-    $conditions = array();
-    $conditions['or'][] = array(
+    $fields = ['pid'];
+    $conditions = [];
+    $conditions['or'][] = [
       'field' => 'path',
       'value' => $normal_path,
       'operator' => '=',
-    );
-    $conditions['or'][] = array(
+    ];
+    $conditions['or'][] = [
       'field' => 'path',
       'value' => $current_path,
       'operator' => '=',
-    );
+    ];
     $protectedPagesStorage = \Drupal::service('protected_pages.storage');
     $pid = $protectedPagesStorage->loadProtectedPage($fields, $conditions, TRUE);
 
