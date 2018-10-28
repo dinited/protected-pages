@@ -9,6 +9,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Url;
 use Egulias\EmailValidator\EmailValidator;
 use Drupal\protected_pages\ProtectedPagesStorage;
+use Drupal\Core\Messenger\Messenger;
 
 /**
  * Provides send protected pages details email form.
@@ -37,17 +38,27 @@ class ProtectedPagesSendEmailForm extends FormBase {
   protected $emailValidator;
 
   /**
+   * Provides messenger service.
+   *
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
+  /**
    * Constructs a new ProtectedPagesSendEmailForm.
    *
    * @param \Drupal\Core\Mail\MailManagerInterface $mail_manager
    *   The mail manager.
    * @param \Egulias\EmailValidator\EmailValidator $email_validator
    *   The email validator.
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   *   The messenger service.
    */
-  public function __construct(MailManagerInterface $mail_manager, EmailValidator $email_validator, ProtectedPagesStorage $protectedPagesStorage) {
+  public function __construct(MailManagerInterface $mail_manager, EmailValidator $email_validator, ProtectedPagesStorage $protectedPagesStorage, Messenger $messenger) {
     $this->mailManager = $mail_manager;
     $this->emailValidator = $email_validator;
     $this->protectedPagesStorage = $protectedPagesStorage;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -55,7 +66,7 @@ class ProtectedPagesSendEmailForm extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-        $container->get('plugin.manager.mail'), $container->get('email.validator'), $container->get('protected_pages.storage')
+        $container->get('plugin.manager.mail'), $container->get('email.validator'), $container->get('protected_pages.storage'), $container->get('messenger')
     );
   }
 
@@ -165,12 +176,12 @@ class ProtectedPagesSendEmailForm extends FormBase {
     $result = $this->mailManager->mail($module, $key, $to, $language_code, $params, $from, $send);
     if ($result['result'] !== TRUE) {
       $message = $this->t('There was a problem sending your email notification to @email.', ['@email' => $to]);
-      drupal_set_message($message, 'error');
+      $this->messenger->addError($message);
       \Drupal::logger('protected_pages')->error($message);
     }
     else {
       $message = t('The Email has been sent to @email.', ['@email' => $to]);
-      drupal_set_message($message);
+      $this->messenger->addMessage($message);
       \Drupal::logger('protected_pages')->notice($message);
     }
 

@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\protected_pages\ProtectedPagesStorage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Messenger\Messenger;
 
 /**
  * Provides delete protected page confirm form.
@@ -28,13 +29,23 @@ class ProtectedPagesDeleteConfirmForm extends ConfirmFormBase {
   protected $protectedPagesStorage;
 
   /**
+   * Provides messenger service.
+   *
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
+  /**
    * Constructs a ProtectedPagesController object.
    *
    * @param \Drupal\protected_pages\ProtectedPagesStorage $protectedPagesStorage
    *   The protected pages storage service.
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   *   The messenger service.
    */
-  public function __construct(ProtectedPagesStorage $protectedPagesStorage) {
+  public function __construct(ProtectedPagesStorage $protectedPagesStorage, Messenger $messenger) {
     $this->protectedPagesStorage = $protectedPagesStorage;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -42,7 +53,8 @@ class ProtectedPagesDeleteConfirmForm extends ConfirmFormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-        $container->get('protected_pages.storage')
+        $container->get('protected_pages.storage'),
+        $container->get('messenger')
     );
   }
 
@@ -104,7 +116,7 @@ class ProtectedPagesDeleteConfirmForm extends ConfirmFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->protectedPagesStorage->deleteProtectedPage($this->pid);
-    drupal_set_message($this->t('The protected page has been successfully deleted.'));
+    $this->messenger->addMessage($this->t('The protected page has been successfully deleted.'));
     $form_state->setRedirectUrl($this->getCancelUrl());
   }
 

@@ -10,6 +10,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\protected_pages\ProtectedPagesStorage;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Password\PasswordInterface;
+use Drupal\Core\Messenger\Messenger;
 
 /**
  * Provides an edit protected page form.
@@ -38,18 +39,28 @@ class ProtectedPagesEditForm extends FormBase {
   protected $password;
 
   /**
+   * Provides messenger service.
+   *
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
+  /**
    * Constructs a new ProtectedPagesEditForm.
    *
    * @param \Drupal\Core\Path\PathValidatorInterface $path_validator
    *   The path validator.
    * @param \Drupal\Core\Password\PasswordInterface $password
    *   The password hashing service.
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   *   The messenger service.
    */
-  public function __construct(PathValidatorInterface $path_validator, PasswordInterface $password, ProtectedPagesStorage $protectedPagesStorage) {
+  public function __construct(PathValidatorInterface $path_validator, PasswordInterface $password, ProtectedPagesStorage $protectedPagesStorage, Messenger $messenger) {
 
     $this->pathValidator = $path_validator;
     $this->password = $password;
     $this->protectedPagesStorage = $protectedPagesStorage;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -57,7 +68,7 @@ class ProtectedPagesEditForm extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-        $container->get('path.validator'), $container->get('password'), $container->get('protected_pages.storage')
+        $container->get('path.validator'), $container->get('password'), $container->get('protected_pages.storage'), $container->get('messenger')
     );
   }
 
@@ -171,7 +182,7 @@ class ProtectedPagesEditForm extends FormBase {
     $page_data['path'] = Html::escape($form_state->getValue('path'));
 
     $this->protectedPagesStorage->updateProtectedPage($page_data, $form_state->getValue('pid'));
-    drupal_set_message($this->t('The protected page settings has been successfully saved.'));
+    $this->messenger->addMessage($this->t('The protected page settings have been successfully saved.'));
     drupal_flush_all_caches();
     $form_state->setRedirect('protected_pages_list');
   }
