@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\protected_pages\ProtectedPagesStorage.
- */
-
 namespace Drupal\protected_pages;
 
 use Drupal\Core\Database\Connection;
