@@ -2,17 +2,103 @@
 
 namespace Drupal\protected_pages\EventSubscriber;
 
+use Drupal\Component\Utility\Unicode;
+use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
+use Drupal\Core\Path\AliasManager;
+use Drupal\Core\Path\CurrentPathStack;
+use Drupal\Core\Routing\RedirectDestination;
+use Drupal\Core\Session\AccountProxy;
+use Drupal\Core\Url;
+use Drupal\protected_pages\ProtectedPagesStorage;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
-use Drupal\Component\Utility\Unicode;
-use Drupal\Core\Url;
 
 /**
  * Redirects user to protected page login screen.
  */
 class ProtectedPagesSubscriber implements EventSubscriberInterface {
+
+  /**
+   * The path alias manager.
+   *
+   * @var \Drupal\Core\Path\AliasManager
+   */
+  protected $aliasManager;
+
+  /**
+   * The account proxy service.
+   *
+   * @var \Drupal\Core\Session\AccountProxy
+   */
+  protected $currentUser;
+
+  /**
+   * The current path stack service.
+   *
+   * @var \Drupal\Core\Path\CurrentPathStack
+   */
+  protected $currentPath;
+
+  /**
+   * The redirect destination service.
+   *
+   * @var \Drupal\Core\Routing\RedirectDestination
+   */
+  protected $destination;
+
+  /**
+   * The request stack service.
+   *
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  protected $requestStack;
+
+  /**
+   * The protected pages storage.
+   *
+   * @var \Drupal\protected_pages\ProtectedPagesStorage
+   */
+  protected $protectedPagesStorage;
+
+  /**
+   * A policy evaluating to static::DENY when the kill switch was triggered.
+   *
+   * @var \Drupal\Core\PageCache\ResponsePolicy\KillSwitch
+   */
+  protected $pageCacheKillSwitch;
+
+  /**
+   * Constructs a new ProtectedPagesSubscriber.
+   *
+   * @param \Drupal\Core\Path\AliasManager $aliasManager
+   *   The path alias manager.
+   * @param \Drupal\Core\Session\AccountProxy $currentUser
+   *   The account proxy service.
+   * @param \Drupal\Core\Path\CurrentPathStack $currentPathStack
+   *   The current path stack service.
+   * @param \Drupal\Core\Routing\RedirectDestination $destination
+   *   The redirect destination service.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
+   *   The request stack service.
+   * @param \Drupal\protected_pages\ProtectedPagesStorage $protectedPagesStorage
+   *   The request stack service.
+   * @param \Drupal\Core\PageCache\ResponsePolicy\KillSwitch $pageCacheKillSwitch
+   *   The cache kill switch service.
+   */
+  public function __construct(AliasManager $aliasManager, AccountProxy $currentUser, CurrentPathStack
+  $currentPathStack, RedirectDestination $destination, RequestStack $requestStack, ProtectedPagesStorage
+  $protectedPagesStorage, KillSwitch $pageCacheKillSwitch) {
+    $this->aliasManager = $aliasManager;
+    $this->currentUser = $currentUser;
+    $this->currentPath = $currentPathStack;
+    $this->destination = $destination;
+    $this->requestStack = $requestStack;
+    $this->protectedPagesStorage = $protectedPagesStorage;
+    $this->pageCacheKillSwitch = $pageCacheKillSwitch;
+  }
 
   /**
    * Redirects user to protected page login screen.
@@ -21,14 +107,11 @@ class ProtectedPagesSubscriber implements EventSubscriberInterface {
    *   The event to process.
    */
   public function checkProtectedPage(FilterResponseEvent $event) {
-    $account = \Drupal::currentUser();
-    if ($account->hasPermission('bypass pages password protection')) {
+    if ($this->currentUser->hasPermission('bypass pages password protection')) {
       return;
     }
-    $current_path = \Drupal::service('path.alias_manager')
-      ->getAliasByPath(\Drupal::service('path.current')->getPath());
-    $normal_path = Unicode::strtolower(\Drupal::service('path.alias_manager')
-      ->getPathByAlias($current_path));
+    $current_path = $this->aliasManager->getAliasByPath($this->currentPath->getPath());
+    $normal_path = Unicode::strtolower($this->aliasManager->getPathByAlias($current_path));
     $pid = $this->protectedPagesIsPageLocked($current_path, $normal_path);
     $this->sendAccessDenied($pid);
 
@@ -38,10 +121,8 @@ class ProtectedPagesSubscriber implements EventSubscriberInterface {
         $nid = $page_node->id();
         if (isset($nid) && is_numeric($nid)) {
           $path_to_node = '/node/' . $nid;
-          $current_path = Unicode::strtolower(\Drupal::service('path.alias_manager')
-            ->getAliasByPath($path_to_node));
-          $normal_path = Unicode::strtolower(\Drupal::service('path.alias_manager')
-            ->getPathByAlias($current_path));
+          $current_path = Unicode::strtolower($this->aliasManager->getAliasByPath($path_to_node));
+          $normal_path = Unicode::strtolower($this->aliasManager->getPathByAlias($current_path));
           $pid = $this->protectedPagesIsPageLocked($current_path, $normal_path);
           $this->sendAccessDenied($pid);
         }
@@ -70,9 +151,8 @@ class ProtectedPagesSubscriber implements EventSubscriberInterface {
 
     $query = \Drupal::destination()->getAsArray();
     $query['protected_page'] = $pid;
-    \Drupal::service('page_cache_kill_switch')->trigger();
-    $response = new RedirectResponse(Url::fromUri('internal:/protected-page', ['query' => $query])
-      ->toString());
+    $this->pageCacheKillSwitch->trigger();
+    $response = new RedirectResponse(Url::fromUri('internal:/protected-page', ['query' => $query])->toString());
     $response->send();
   }
 
@@ -100,8 +180,7 @@ class ProtectedPagesSubscriber implements EventSubscriberInterface {
       'value' => $current_path,
       'operator' => '=',
     ];
-    $protectedPagesStorage = \Drupal::service('protected_pages.storage');
-    $pid = $protectedPagesStorage->loadProtectedPage($fields, $conditions, TRUE);
+    $pid = $this->protectedPagesStorage->loadProtectedPage($fields, $conditions, TRUE);
 
     if (isset($_SESSION['_protected_page']['passwords'][$pid]['expire_time'])) {
       if (time() >= $_SESSION['_protected_page']['passwords'][$pid]['expire_time']) {
