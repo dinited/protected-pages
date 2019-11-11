@@ -2,13 +2,14 @@
 
 namespace Drupal\protected_pages\Form;
 
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\protected_pages\ProtectedPagesStorage;
 use Drupal\Core\Password\PasswordInterface;
-use Drupal\Core\Access\AccessResult;
-use Drupal\Component\Utility\Html;
+use Drupal\Core\Session\AccountProxy;
+use Drupal\protected_pages\ProtectedPagesStorage;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides login screen to access protected page.
@@ -30,15 +31,24 @@ class ProtectedPagesLoginForm extends FormBase {
   protected $password;
 
   /**
+   * Account proxy service.
+   *
+   * @var \Drupal\Core\Session\AccountProxy
+   */
+  protected $currentUser;
+
+  /**
    * Constructs a new ProtectedPagesLoginForm.
    *
    * @param \Drupal\Core\Password\PasswordInterface $password
    *   The password hashing service.
+   * @param \Drupal\Core\Session\AccountProxy $currentUser
+   *   The current user service.
    */
-  public function __construct(PasswordInterface $password, ProtectedPagesStorage $protectedPagesStorage) {
-
+  public function __construct(PasswordInterface $password, ProtectedPagesStorage $protectedPagesStorage, AccountProxy $currentUser) {
     $this->password = $password;
     $this->protectedPagesStorage = $protectedPagesStorage;
+    $this->currentUser = $currentUser;
   }
 
   /**
@@ -46,7 +56,9 @@ class ProtectedPagesLoginForm extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-        $container->get('password'), $container->get('protected_pages.storage')
+      $container->get('password'),
+      $container->get('protected_pages.storage'),
+      $container->get('current_user')
     );
   }
 
@@ -64,11 +76,9 @@ class ProtectedPagesLoginForm extends FormBase {
    *   The access result.
    */
   public function accessProtectedPageLoginScreen() {
-    $account = \Drupal::currentUser();
-
     $param_protected_page = $this->getRequest()->query->get('protected_page');
     $param_exists = (isset($param_protected_page) && is_numeric($param_protected_page));
-    return AccessResult::allowedIf(($account->hasPermission('access protected page password screen') || ($account->id() == 1)) && $param_exists);
+    return AccessResult::allowedIf(($this->currentUser->hasPermission('access protected page password screen') || ($this->currentUser->id() == 1)) && $param_exists);
   }
 
   /**

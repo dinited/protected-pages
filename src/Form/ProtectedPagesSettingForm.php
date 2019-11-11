@@ -2,14 +2,14 @@
 
 namespace Drupal\protected_pages\Form;
 
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Mail\MailManagerInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Egulias\EmailValidator\EmailValidator;
-use Drupal\Core\Render\RendererInterface;
-use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Password\PasswordInterface;
-use Drupal\Component\Utility\Html;
+use Drupal\Core\Render\RendererInterface;
+use Egulias\EmailValidator\EmailValidator;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides protected pages settings configuration form.
@@ -75,7 +75,10 @@ class ProtectedPagesSettingForm extends ConfigFormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-        $container->get('plugin.manager.mail'), $container->get('email.validator'), $container->get('renderer'), $container->get('password')
+      $container->get('plugin.manager.mail'),
+      $container->get('email.validator'),
+      $container->get('renderer'),
+      $container->get('password')
     );
   }
 
