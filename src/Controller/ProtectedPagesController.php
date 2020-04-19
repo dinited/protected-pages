@@ -75,7 +75,7 @@ class ProtectedPagesController extends ControllerBase {
               'url' => Url::fromUri('internal:/admin/config/system/protected_pages/' . $page->pid . '/edit'),
             ],
             'delete-protected-page' => [
-              'title' => $this->t('Delete'),
+              'title' => $this->t('Remove Password'),
               'url' => Url::fromUri('internal:/admin/config/system/protected_pages/' . $page->pid . '/delete'),
             ],
             'send-email' => [

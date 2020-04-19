@@ -65,7 +65,7 @@ class ProtectedPagesDeleteConfirmForm extends ConfirmFormBase {
    *   The form question. The page title will be set to this value.
    */
   public function getQuestion() {
-    return $this->t('Are you sure you want to delete this page?');
+    return $this->t('Are you sure you want to remove the password for this page?');
   }
 
   /**
@@ -92,7 +92,7 @@ class ProtectedPagesDeleteConfirmForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function getConfirmText() {
-    return $this->t('Delete page');
+    return $this->t('Remove Password');
   }
 
   /**
@@ -116,7 +116,7 @@ class ProtectedPagesDeleteConfirmForm extends ConfirmFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->protectedPagesStorage->deleteProtectedPage($this->pid);
-    $this->messenger->addMessage($this->t('The protected page has been successfully deleted.'));
+    $this->messenger->addMessage($this->t('The password has been successfully removed.'));
     $form_state->setRedirectUrl($this->getCancelUrl());
   }
 
