@@ -217,7 +217,8 @@ class ProtectedPagesSendEmailForm extends FormBase {
       $this->loggerFactory->get('protected_pages')->error($message);
     }
     else {
-      $message = t('The Email has been sent to @email.', ['@email' => $to]);
+      $message =$this->t('The Email has been sent to @email.', ['@email' =>
+        $to]);
       $this->loggerFactory->get('protected_pages')->notice($message);
     }
 

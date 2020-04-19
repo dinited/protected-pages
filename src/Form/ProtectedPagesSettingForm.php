@@ -124,7 +124,7 @@ class ProtectedPagesSettingForm extends ConfigFormBase {
     ];
     $form['protected_pages_password_fieldset']['protected_pages_user_global_password'] = [
       '#type' => 'select',
-      '#title' => t('Global Password Setting'),
+      '#title' => $this->t('Global Password Setting'),
       '#default_value' => $config->get('password.per_page_or_global'),
       '#options' => [
         'per_page_password' => $this->t('Allow per page password'),

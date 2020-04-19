@@ -61,7 +61,7 @@ class ProtectedPagesController extends ControllerBase {
     ];
 
     $rows = [];
-    $headers = [t('#'), t('Relative Path'), t('Operations')];
+    $headers = [$this->t('#'), $this->t('Relative Path'), $this->t('Operations')];
     $count = 1;
     $result = $this->protectedPagesStorage->loadAllProtectedPages();
     foreach ($result as $page) {
@@ -101,7 +101,7 @@ class ProtectedPagesController extends ControllerBase {
       '#type' => 'table',
       '#header' => $headers,
       '#rows' => $rows,
-      '#empty' => t('No records available.'),
+      '#empty' => $this->t('No records available.'),
     ];
     $content['pager'] = ['#type' => 'pager'];
 

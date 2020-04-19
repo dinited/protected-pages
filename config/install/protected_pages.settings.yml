@@ -11,3 +11,4 @@ others:
   protected_pages_submit_button_text: 'Authenticate'
   protected_pages_incorrect_password_msg: 'Incorrect password!'
 langcode: en
+default_langcode: en

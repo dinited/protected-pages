@@ -1,5 +1,6 @@
 protected_pages.settings:
   type: config_object
+  translatable: true
   label: 'Settings'
   mapping:
     password:
@@ -22,32 +23,34 @@ protected_pages.settings:
           type: string
           label: 'Session Expire Time'
     email:
-      type: config_object
+      label: 'Email settings'
+      type: mapping
       mapping:
         subject:
-          type: string
-          label: 'Email subject'
+          label: 'Subject'
+          type: text
         body:
-          type: string
-          label: 'Email content'
+          label: 'Message'
+          type: text
     others:
-      type: config_object
+      label: 'Other settings'
+      type: mapping
       mapping:
         protected_pages_title:
-          type: string
-          label: 'Protected Page -- Enter password'
+          label: 'Protected pages title'
+          type: text
         protected_pages_description:
-          type: string
-          label: 'The page you are trying to view is password protected. Please enter the password below to proceed.'
+          label: 'Protected pages description'
+          type: text
         protected_pages_password_label:
-          type: string
-          label: 'Enter Password'
+          label: 'Protected pages password label'
+          type: text
         protected_pages_submit_button_text:
-          type: string
-          label: 'Authenticate'
+          label: 'Protected pages submit button text'
+          type: text
         protected_pages_incorrect_password_msg:
-          type: string
-          label: 'Incorrect password!'
+          label: 'Protected pages password message'
+          type: text
     langcode:
       type: string
       label: 'Language code'
