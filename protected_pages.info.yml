@@ -3,4 +3,4 @@ type: module
 description: 'Allow you to protect pages, private files by secure password.'
 configure: protected_pages_settings
 package: 'Access'
-core: 8.x
+core_version_requirement: ^8.8 || ^9
