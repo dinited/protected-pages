@@ -3,13 +3,12 @@
 namespace Drupal\protected_pages\Form;
 
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Password\PasswordInterface;
-use Drupal\Core\Path\AliasManager;
 use Drupal\Core\Path\PathValidatorInterface;
+use Drupal\path_alias\AliasManager;
 use Drupal\protected_pages\ProtectedPagesStorage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -49,7 +48,7 @@ class ProtectedPagesEditForm extends FormBase {
   /**
    * Path alias manager.
    *
-   * @var \Drupal\Core\Path\AliasManager
+   * @var \Drupal\path_alias\AliasManager
    */
   protected $aliasManager;
 
@@ -60,9 +59,11 @@ class ProtectedPagesEditForm extends FormBase {
    *   The path validator.
    * @param \Drupal\Core\Password\PasswordInterface $password
    *   The password hashing service.
+   * @param \Drupal\protected_pages\ProtectedPagesStorage $protectedPagesStorage
+   *   The protected pages storage.
    * @param \Drupal\Core\Messenger\Messenger $messenger
    *   The messenger service.
-   * @param \Drupal\Core\Path\AliasManager $aliasManager
+   * @param \Drupal\path_alias\AliasManager $aliasManager
    *   The path alias manager service.
    */
   public function __construct(PathValidatorInterface $path_validator, PasswordInterface $password, ProtectedPagesStorage $protectedPagesStorage, Messenger $messenger, AliasManager $aliasManager) {
@@ -95,9 +96,6 @@ class ProtectedPagesEditForm extends FormBase {
 
   /**
    * {@inheritdoc}
-   *
-   * @param int $pid
-   *   The ID of the protected page.
    */
   public function buildForm(array $form, FormStateInterface $form_state, $pid = NULL) {
     $fields = ['path'];
@@ -109,7 +107,6 @@ class ProtectedPagesEditForm extends FormBase {
     ];
 
     $path = $this->protectedPagesStorage->loadProtectedPage($fields, $conditions, TRUE);
-    $form = [];
 
     $form['rules_list'] = [
       '#title' => $this->t("Edit Protected Page Relative path and password."),
@@ -153,7 +150,7 @@ class ProtectedPagesEditForm extends FormBase {
     }
     else {
       $normal_path = $this->aliasManager->getPathByAlias($form_state->getValue('path'));
-      $path_alias = Unicode::strtolower($this->aliasManager->getAliasByPath($form_state->getValue('path')));
+      $path_alias = mb_strtolower($this->aliasManager->getAliasByPath($form_state->getValue('path')));
       if (!$this->pathValidator->isValid($normal_path)) {
         $form_state->setErrorByName('path', $this->t('Please enter a correct path!'));
       }

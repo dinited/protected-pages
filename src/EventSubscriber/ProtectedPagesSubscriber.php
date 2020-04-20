@@ -2,13 +2,12 @@
 
 namespace Drupal\protected_pages\EventSubscriber;
 
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
-use Drupal\Core\Path\AliasManager;
 use Drupal\Core\Path\CurrentPathStack;
 use Drupal\Core\Routing\RedirectDestination;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\Url;
+use Drupal\path_alias\AliasManager;
 use Drupal\protected_pages\ProtectedPagesStorage;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -24,7 +23,7 @@ class ProtectedPagesSubscriber implements EventSubscriberInterface {
   /**
    * The path alias manager.
    *
-   * @var \Drupal\Core\Path\AliasManager
+   * @var \Drupal\path_alias\AliasManager
    */
   protected $aliasManager;
 
@@ -73,7 +72,7 @@ class ProtectedPagesSubscriber implements EventSubscriberInterface {
   /**
    * Constructs a new ProtectedPagesSubscriber.
    *
-   * @param \Drupal\Core\Path\AliasManager $aliasManager
+   * @param \Drupal\path_alias\AliasManager $aliasManager
    *   The path alias manager.
    * @param \Drupal\Core\Session\AccountProxy $currentUser
    *   The account proxy service.
@@ -88,9 +87,7 @@ class ProtectedPagesSubscriber implements EventSubscriberInterface {
    * @param \Drupal\Core\PageCache\ResponsePolicy\KillSwitch $pageCacheKillSwitch
    *   The cache kill switch service.
    */
-  public function __construct(AliasManager $aliasManager, AccountProxy $currentUser, CurrentPathStack
-  $currentPathStack, RedirectDestination $destination, RequestStack $requestStack, ProtectedPagesStorage
-  $protectedPagesStorage, KillSwitch $pageCacheKillSwitch) {
+  public function __construct(AliasManager $aliasManager, AccountProxy $currentUser, CurrentPathStack $currentPathStack, RedirectDestination $destination, RequestStack $requestStack, ProtectedPagesStorage $protectedPagesStorage, KillSwitch $pageCacheKillSwitch) {
     $this->aliasManager = $aliasManager;
     $this->currentUser = $currentUser;
     $this->currentPath = $currentPathStack;
@@ -111,7 +108,7 @@ class ProtectedPagesSubscriber implements EventSubscriberInterface {
       return;
     }
     $current_path = $this->aliasManager->getAliasByPath($this->currentPath->getPath());
-    $normal_path = Unicode::strtolower($this->aliasManager->getPathByAlias($current_path));
+    $normal_path = mb_strtolower($this->aliasManager->getPathByAlias($current_path));
     $pid = $this->protectedPagesIsPageLocked($current_path, $normal_path);
     $this->sendAccessDenied($pid);
 
@@ -121,8 +118,8 @@ class ProtectedPagesSubscriber implements EventSubscriberInterface {
         $nid = $page_node->id();
         if (isset($nid) && is_numeric($nid)) {
           $path_to_node = '/node/' . $nid;
-          $current_path = Unicode::strtolower($this->aliasManager->getAliasByPath($path_to_node));
-          $normal_path = Unicode::strtolower($this->aliasManager->getPathByAlias($current_path));
+          $current_path = mb_strtolower($this->aliasManager->getAliasByPath($path_to_node));
+          $normal_path = mb_strtolower($this->aliasManager->getPathByAlias($current_path));
           $pid = $this->protectedPagesIsPageLocked($current_path, $normal_path);
           $this->sendAccessDenied($pid);
         }
@@ -167,7 +164,7 @@ class ProtectedPagesSubscriber implements EventSubscriberInterface {
    * @return int
    *   The protected page id.
    */
-  public function protectedPagesIsPageLocked($current_path, $normal_path) {
+  public function protectedPagesIsPageLocked(string $current_path, string $normal_path) {
     $fields = ['pid'];
     $conditions = [];
     $conditions['or'][] = [

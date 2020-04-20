@@ -4,10 +4,10 @@ namespace Drupal\protected_pages\Form;
 
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Url;
 use Drupal\protected_pages\ProtectedPagesStorage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Messenger\Messenger;
 
 /**
  * Provides delete protected page confirm form.
@@ -97,9 +97,6 @@ class ProtectedPagesDeleteConfirmForm extends ConfirmFormBase {
 
   /**
    * {@inheritdoc}
-   *
-   * @param int $pid
-   *   (optional) The ID of the protected page to be deleted.
    */
   public function buildForm(array $form, FormStateInterface $form_state, $pid = NULL) {
     $this->pid = $pid;

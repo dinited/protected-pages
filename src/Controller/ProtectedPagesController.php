@@ -2,12 +2,12 @@
 
 namespace Drupal\protected_pages\Controller;
 
-use Drupal\protected_pages\ProtectedPagesStorage;
-use Drupal\Core\Controller\ControllerBase;
 use Drupal\Component\Utility\Html;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Url;
+use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Url;
+use Drupal\protected_pages\ProtectedPagesStorage;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Controller for listing protected pages.
@@ -46,7 +46,8 @@ class ProtectedPagesController extends ControllerBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-        $container->get('renderer'), $container->get('protected_pages.storage')
+      $container->get('renderer'),
+      $container->get('protected_pages.storage')
     );
   }
 
@@ -61,7 +62,11 @@ class ProtectedPagesController extends ControllerBase {
     ];
 
     $rows = [];
-    $headers = [$this->t('#'), $this->t('Relative Path'), $this->t('Operations')];
+    $headers = [
+      $this->t('#'),
+      $this->t('Relative Path'),
+      $this->t('Operations'),
+    ];
     $count = 1;
     $result = $this->protectedPagesStorage->loadAllProtectedPages();
     foreach ($result as $page) {

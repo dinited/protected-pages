@@ -75,6 +75,8 @@ class ProtectedPagesSendEmailForm extends FormBase {
    *   The mail manager.
    * @param \Egulias\EmailValidator\EmailValidator $email_validator
    *   The email validator.
+   * @param \Drupal\protected_pages\ProtectedPagesStorage $protectedPagesStorage
+   *   The protected pages storage.
    * @param \Drupal\Core\Messenger\Messenger $messenger
    *   The messenger service.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
@@ -217,8 +219,7 @@ class ProtectedPagesSendEmailForm extends FormBase {
       $this->loggerFactory->get('protected_pages')->error($message);
     }
     else {
-      $message =$this->t('The Email has been sent to @email.', ['@email' =>
-        $to]);
+      $message = $this->t('The Email has been sent to @email.', ['@email' => $to]);
       $this->loggerFactory->get('protected_pages')->notice($message);
     }
 
