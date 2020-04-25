@@ -83,7 +83,7 @@ class ProtectedPagesEditForm extends FormBase {
       $container->get('password'),
       $container->get('protected_pages.storage'),
       $container->get('messenger'),
-      $container->get('path.alias_manager')
+      $container->get('path_alias.manager')
     );
   }
 
