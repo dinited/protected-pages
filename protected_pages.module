@@ -10,9 +10,9 @@
  */
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\StreamWrapper\StreamWrapperManager;
 use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
 
 /**
  * Implements hook_mail().
@@ -48,7 +48,7 @@ function protected_pages_file_download($uri) {
     return;
   }
 
-  $target = StreamWrapperManagerInterface::getTarget($uri);
+  $target = StreamWrapperManager::getTarget($uri);
   $file_path = '/system/files/' . $target;
 
   $fields = ['pid'];
