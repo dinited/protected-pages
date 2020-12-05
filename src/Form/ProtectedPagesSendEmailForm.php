@@ -6,7 +6,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManager;
-use Drupal\Core\Logger\LoggerChannelFactory;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Url;
@@ -64,7 +64,7 @@ class ProtectedPagesSendEmailForm extends FormBase {
   /**
    * Logger channel factory.
    *
-   * @var \Drupal\Core\Logger\LoggerChannelFactory
+   * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
    */
   protected $loggerFactory;
 
@@ -83,10 +83,10 @@ class ProtectedPagesSendEmailForm extends FormBase {
    *   The config factory service interface.
    * @param \Drupal\Core\Language\LanguageManager $languageManager
    *   The language manager service.
-   * @param \Drupal\Core\Logger\LoggerChannelFactory $loggerFactory
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerFactory
    *   The logger channel factory service.
    */
-  public function __construct(MailManagerInterface $mail_manager, EmailValidator $email_validator, ProtectedPagesStorage $protectedPagesStorage, Messenger $messenger, ConfigFactoryInterface $configFactory, LanguageManager $languageManager, LoggerChannelFactory $loggerFactory) {
+  public function __construct(MailManagerInterface $mail_manager, EmailValidator $email_validator, ProtectedPagesStorage $protectedPagesStorage, Messenger $messenger, ConfigFactoryInterface $configFactory, LanguageManager $languageManager, LoggerChannelFactoryInterface $loggerFactory) {
     $this->mailManager = $mail_manager;
     $this->emailValidator = $email_validator;
     $this->protectedPagesStorage = $protectedPagesStorage;
