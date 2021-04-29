@@ -4,3 +4,5 @@ description: 'Allow you to protect pages, private files by secure password.'
 configure: protected_pages_settings
 package: 'Access'
 core_version_requirement: ^8.8 || ^9
+dependencies:
+  - drupal:path_alias
