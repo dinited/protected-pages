@@ -115,6 +115,7 @@ class ProtectedPagesLoginForm extends FormBase {
     $form['protected_page_enter_password'] = [
       '#type' => 'fieldset',
       '#collapsible' => FALSE,
+      '#title' => $config->get('others.protected_pages_password_fieldset_legend'),
     ];
 
     $form['protected_page_enter_password']['protected_page_pid'] = [

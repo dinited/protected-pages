@@ -109,7 +109,7 @@ class ProtectedPagesEditForm extends FormBase {
     $path = $this->protectedPagesStorage->loadProtectedPage($fields, $conditions, TRUE);
 
     $form['rules_list'] = [
-      '#title' => $this->t("Edit Protected Page Relative path and password."),
+      '#title' => $this->t("Edit Protected Page relative path and password."),
       '#type' => 'details',
       '#description' => $this->t('Please enter the relative path and its corresponding
     password. When user opens this url, they will asked to enter password to
@@ -118,9 +118,9 @@ class ProtectedPagesEditForm extends FormBase {
     ];
     $form['rules_list']['path'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Relative Path'),
+      '#title' => $this->t('Relative path'),
       '#default_value' => $path,
-      '#description' => $this->t('Enter relative drupal path. For example, "/node/5", "/new-events" etc.'),
+      '#description' => $this->t('Enter relative Drupal path. For example, "/node/5", "/new-events" etc.'),
       '#required' => TRUE,
     ];
     $form['rules_list']['password'] = [

@@ -139,19 +139,19 @@ class ProtectedPagesSendEmailForm extends FormBase {
       '#type' => 'textarea',
       '#title' => $this->t('Recipents'),
       '#rows' => 5,
-      '#description' => $this->t('Enter enter comma separated list of recipents.'),
+      '#description' => $this->t('Enter comma separated list of recipients.'),
       '#required' => TRUE,
     ];
     $form['send_email_box']['subject'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Subject'),
       '#default_value' => $config->get('email.subject'),
-      '#description' => $this->t('Enter subject of email.'),
+      '#description' => $this->t('Enter email subject.'),
       '#required' => TRUE,
     ];
     $form['send_email_box']['body'] = [
       '#type' => 'textarea',
-      '#title' => $this->t('Email Body'),
+      '#title' => $this->t('Email body'),
       '#rows' => 15,
       '#default_value' => $config->get('email.body'),
       '#description' => $this->t('Enter the body of the email. Only [protected-page-url] and [site-name] tokens are available.
@@ -161,7 +161,7 @@ class ProtectedPagesSendEmailForm extends FormBase {
 
     $form['send_email_box']['submit'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Send Email'),
+      '#value' => $this->t('Send email'),
     ];
     return $form;
   }

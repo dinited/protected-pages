@@ -92,7 +92,7 @@ class ProtectedPagesDeleteConfirmForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function getConfirmText() {
-    return $this->t('Remove Password');
+    return $this->t('Remove password');
   }
 
   /**

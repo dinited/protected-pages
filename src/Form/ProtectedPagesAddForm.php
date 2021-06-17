@@ -99,7 +99,7 @@ class ProtectedPagesAddForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form['rules_list'] = [
-      '#title' => $this->t('Add Protected Page Relative path and password.'),
+      '#title' => $this->t('Add Protected Page relative path and password.'),
       '#type' => 'details',
       '#description' => $this->t('Please enter the relative path and its corresponding
     password. When user opens this url, they will asked to enter password to
@@ -108,8 +108,8 @@ class ProtectedPagesAddForm extends FormBase {
     ];
     $form['rules_list']['path'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Relative Path'),
-      '#description' => $this->t('Enter relative drupal path. For example, "/node/5", "new-events" etc.'),
+      '#title' => $this->t('Relative path'),
+      '#description' => $this->t('Enter relative Drupal path. For example, "/node/5", "new-events" etc.'),
       '#required' => TRUE,
     ];
     $form['rules_list']['password'] = [
