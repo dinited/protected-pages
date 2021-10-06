@@ -48,7 +48,7 @@ class ProtectedPagesAccess extends BrowserTestBase {
 
     // Protect created node.
     $page_data = [
-      'password' => 'test_pass',
+      'password' => bin2hex(random_bytes(9)),
       'path' => '/node/' . $node->id(),
     ];
     $storage = \Drupal::service('protected_pages.storage');
