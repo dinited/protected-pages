@@ -10,5 +10,5 @@ others:
   protected_pages_password_fieldset_legend: 'Enter password'
   protected_pages_password_label: 'Enter password'
   protected_pages_submit_button_text: 'Authenticate'
-  protected_pages_incorrect_password_msg: 'Incorrect password!'
+  protected_pages_incorrect_password_msg: 'An incorrect password was submitted. Please check your password and try again.'
 langcode: en
