@@ -18,7 +18,9 @@ use Symfony\Component\HttpKernel\KernelEvents;
 /**
  * Redirects user to protected page login screen.
  */
-class ProtectedPagesSubscriber implements EventSubscriberInterface {
+class ProtectedPagesSubscriber implements EventSubscriberInterface
+{
+    const BYPASS_PROTECTION_PERMISSION_ID = 'bypass pages password protection';
 
   /**
    * The path alias manager.
@@ -103,92 +105,57 @@ class ProtectedPagesSubscriber implements EventSubscriberInterface {
    * @param \Symfony\Component\HttpKernel\Event\FilterResponseEvent $event
    *   The event to process.
    */
-  public function checkProtectedPage(FilterResponseEvent $event) {
-    if ($this->currentUser->hasPermission('bypass pages password protection')) {
-      return;
-    }
-    $current_path = $this->aliasManager->getAliasByPath($this->currentPath->getPath());
-    $normal_path = mb_strtolower($this->aliasManager->getPathByAlias($current_path));
-    $pid = $this->protectedPagesIsPageLocked($current_path, $normal_path);
-    $this->sendAccessDenied($pid);
-
-    if (empty($pid)) {
-      $page_node = \Drupal::request()->attributes->get('node');
-      if (is_object($page_node)) {
-        $nid = $page_node->id();
-        if (isset($nid) && is_numeric($nid)) {
-          $path_to_node = '/node/' . $nid;
-          $current_path = mb_strtolower($this->aliasManager->getAliasByPath($path_to_node));
-          $normal_path = mb_strtolower($this->aliasManager->getPathByAlias($current_path));
-          $pid = $this->protectedPagesIsPageLocked($current_path, $normal_path);
-          $this->sendAccessDenied($pid);
-        }
+  public function checkProtectedPage(FilterResponseEvent $event)
+  {
+      if ($this->currentUser->hasPermission(self::BYPASS_PROTECTION_PERMISSION_ID)) {
+          return;
       }
-    }
+
+      $target = mb_strtolower($this->aliasManager->getAliasByPath($this->currentPath->getPath()));
+
+      $guard = $this->isPageProtected($target);
+      if (null === $guard) {
+          return;
+      }
+
+      if($this->isAuthenticated($guard->pid)) {
+          return;
+      }
+
+      $this->redirectToLogin($guard->pid)->send();
   }
 
-  /**
-   * {@inheritdoc}
-   */
+  public function isPageProtected(string $target)
+  {
+      $result = $this->protectedPagesStorage->loadProtectedPage(['pid', 'path'], [], FALSE);
+      foreach($result as $data) {
+          if(true === fnmatch($data->path, $target)) {
+              return $data;
+          }
+          if($data->path === sprintf('%s/*', $target)) {
+              return $data;
+          }
+      }
+      return null;
+  }
+
+  public function isAuthenticated(int $pid)
+  {
+      if (isset($_SESSION['_protected_page']['passwords'][$pid])) {
+          return true;
+      }
+      return false;
+  }
+
+  public function redirectToLogin(int $pid) {
+      $query = \Drupal::destination()->getAsArray();
+      $query['protected_page'] = $pid;
+      $this->pageCacheKillSwitch->trigger();
+      return new RedirectResponse(Url::fromUri('internal:/protected-page', ['query' => $query])->toString());
+  }
+
   public static function getSubscribedEvents() {
     $events[KernelEvents::RESPONSE][] = ['checkProtectedPage'];
     return $events;
   }
-
-  /**
-   * Send Access Denied for pid.
-   *
-   * @param int $pid
-   *   The Protected Page ID.
-   */
-  public function sendAccessDenied($pid) {
-    if (empty($pid)) {
-      return;
-    }
-
-    $query = \Drupal::destination()->getAsArray();
-    $query['protected_page'] = $pid;
-    $this->pageCacheKillSwitch->trigger();
-    $response = new RedirectResponse(Url::fromUri('internal:/protected-page', ['query' => $query])->toString());
-    $response->send();
-  }
-
-  /**
-   * Returns protected page id.
-   *
-   * @param string $current_path
-   *   Current path alias.
-   * @param string $normal_path
-   *   Current normal path.
-   *
-   * @return int
-   *   The protected page id.
-   */
-  public function protectedPagesIsPageLocked(string $current_path, string $normal_path) {
-    $fields = ['pid'];
-    $conditions = [];
-    $conditions['or'][] = [
-      'field' => 'path',
-      'value' => $normal_path,
-      'operator' => '=',
-    ];
-    $conditions['or'][] = [
-      'field' => 'path',
-      'value' => $current_path,
-      'operator' => '=',
-    ];
-    $pid = $this->protectedPagesStorage->loadProtectedPage($fields, $conditions, TRUE);
-
-    if (isset($_SESSION['_protected_page']['passwords'][$pid]['expire_time'])) {
-      if (time() >= $_SESSION['_protected_page']['passwords'][$pid]['expire_time']) {
-        unset($_SESSION['_protected_page']['passwords'][$pid]['request_time']);
-        unset($_SESSION['_protected_page']['passwords'][$pid]['expire_time']);
-      }
-    }
-    if (isset($_SESSION['_protected_page']['passwords'][$pid]['request_time'])) {
-      return FALSE;
-    }
-    return $pid;
-  }
-
 }

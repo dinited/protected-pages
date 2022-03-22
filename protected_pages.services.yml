@@ -7,3 +7,6 @@ services:
   protected_pages.storage:
     class: Drupal\protected_pages\ProtectedPagesStorage
     arguments: ['@database']
+  protected_pages.wildcard_path_validator:
+    class: Drupal\protected_pages\Validator\WildCardPathValidator
+    arguments: [ '@router', '@router.no_access_checks', '@current_user', '@path_processor_manager' ]

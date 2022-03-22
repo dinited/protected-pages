@@ -7,9 +7,9 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Password\PasswordInterface;
-use Drupal\Core\Path\PathValidatorInterface;
 use Drupal\path_alias\AliasManager;
 use Drupal\protected_pages\ProtectedPagesStorage;
+use Drupal\protected_pages\Validator\WildCardPathValidator;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -27,7 +27,7 @@ class ProtectedPagesEditForm extends FormBase {
   /**
    * The path validator.
    *
-   * @var \Drupal\Core\Path\PathValidatorInterface
+   * @var \Drupal\protected_pages\Validator\WildCardPathValidator
    */
   protected $pathValidator;
 
@@ -55,7 +55,7 @@ class ProtectedPagesEditForm extends FormBase {
   /**
    * Constructs a new ProtectedPagesAddForm.
    *
-   * @param \Drupal\Core\Path\PathValidatorInterface $path_validator
+   * @param \Drupal\protected_pages\Validator\WildCardPathValidator $path_validator
    *   The path validator.
    * @param \Drupal\Core\Password\PasswordInterface $password
    *   The password hashing service.
@@ -66,7 +66,7 @@ class ProtectedPagesEditForm extends FormBase {
    * @param \Drupal\path_alias\AliasManager $aliasManager
    *   The path alias manager service.
    */
-  public function __construct(PathValidatorInterface $path_validator, PasswordInterface $password, ProtectedPagesStorage $protectedPagesStorage, Messenger $messenger, AliasManager $aliasManager) {
+  public function __construct(WildCardPathValidator $path_validator, PasswordInterface $password, ProtectedPagesStorage $protectedPagesStorage, Messenger $messenger, AliasManager $aliasManager) {
     $this->pathValidator = $path_validator;
     $this->password = $password;
     $this->protectedPagesStorage = $protectedPagesStorage;
@@ -79,7 +79,7 @@ class ProtectedPagesEditForm extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('path.validator'),
+      $container->get('protected_pages.wildcard_path_validator'),
       $container->get('password'),
       $container->get('protected_pages.storage'),
       $container->get('messenger'),
