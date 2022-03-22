@@ -1,14 +1,10 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\protected_pages\Form\ProtectedPagesDeleteConfirmForm.
- */
-
 namespace Drupal\protected_pages\Form;
 
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Url;
 use Drupal\protected_pages\ProtectedPagesStorage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -33,13 +29,23 @@ class ProtectedPagesDeleteConfirmForm extends ConfirmFormBase {
   protected $protectedPagesStorage;
 
   /**
+   * Provides messenger service.
+   *
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
+  /**
    * Constructs a ProtectedPagesController object.
    *
    * @param \Drupal\protected_pages\ProtectedPagesStorage $protectedPagesStorage
    *   The protected pages storage service.
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   *   The messenger service.
    */
-  public function __construct(ProtectedPagesStorage $protectedPagesStorage) {
+  public function __construct(ProtectedPagesStorage $protectedPagesStorage, Messenger $messenger) {
     $this->protectedPagesStorage = $protectedPagesStorage;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -47,7 +53,8 @@ class ProtectedPagesDeleteConfirmForm extends ConfirmFormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-        $container->get('protected_pages.storage')
+        $container->get('protected_pages.storage'),
+        $container->get('messenger')
     );
   }
 
@@ -58,7 +65,7 @@ class ProtectedPagesDeleteConfirmForm extends ConfirmFormBase {
    *   The form question. The page title will be set to this value.
    */
   public function getQuestion() {
-    return $this->t('Are you sure you want to delete this page?');
+    return $this->t('Are you sure you want to remove the password for this page?');
   }
 
   /**
@@ -85,14 +92,11 @@ class ProtectedPagesDeleteConfirmForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function getConfirmText() {
-    return $this->t('Delete page');
+    return $this->t('Remove password');
   }
 
   /**
    * {@inheritdoc}
-   *
-   * @param int $pid
-   *   (optional) The ID of the protected page to be deleted.
    */
   public function buildForm(array $form, FormStateInterface $form_state, $pid = NULL) {
     $this->pid = $pid;
@@ -109,7 +113,7 @@ class ProtectedPagesDeleteConfirmForm extends ConfirmFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->protectedPagesStorage->deleteProtectedPage($this->pid);
-    drupal_set_message($this->t('The protected page has been successfully deleted.'));
+    $this->messenger->addMessage($this->t('The password has been successfully removed.'));
     $form_state->setRedirectUrl($this->getCancelUrl());
   }
 

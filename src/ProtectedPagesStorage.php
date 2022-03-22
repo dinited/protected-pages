@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\protected_pages\ProtectedPagesStorage.
- */
-
 namespace Drupal\protected_pages;
 
 use Drupal\Core\Database\Connection;
@@ -38,13 +33,13 @@ class ProtectedPagesStorage {
    * @param array $page_data
    *   An array containing all values.
    *
-   * @return int $pid
+   * @return int
    *   The protected page id.
    */
   public function insertProtectedPage(array $page_data) {
     $query = $this->connection->insert('protected_pages')
-        ->fields(['password', 'path'])
-        ->values($page_data);
+      ->fields(['password', 'path'])
+      ->values($page_data);
     $pid = $query->execute();
     return $pid;
   }
@@ -59,9 +54,9 @@ class ProtectedPagesStorage {
    */
   public function updateProtectedPage(array $page_data, $pid) {
     $this->connection->update('protected_pages')
-        ->fields($page_data)
-        ->condition('pid', $pid)
-        ->execute();
+      ->fields($page_data)
+      ->condition('pid', $pid)
+      ->execute();
   }
 
   /**
@@ -72,8 +67,8 @@ class ProtectedPagesStorage {
    */
   public function deleteProtectedPage($pid) {
     $this->connection->delete('protected_pages')
-        ->condition('pid', $pid)
-        ->execute();
+      ->condition('pid', $pid)
+      ->execute();
   }
 
   /**
@@ -85,8 +80,11 @@ class ProtectedPagesStorage {
    *   An array containing all conditions.
    * @param bool $get_single_field
    *   Boolean to check if functions needs to return one or multiple fields.
+   *
+   * @return mixed
+   *   A single value or an array of results.
    */
-  public function loadProtectedPage($fields = [], $query_conditions = [], $get_single_field = FALSE) {
+  public function loadProtectedPage(array $fields = [], array $query_conditions = [], $get_single_field = FALSE) {
     $select = $this->connection->select('protected_pages');
     if (count($fields)) {
       $select->fields('protected_pages', $fields);
@@ -133,12 +131,12 @@ class ProtectedPagesStorage {
    */
   public function loadAllProtectedPages() {
     $results = $this->connection->select('protected_pages', 'p')
-        ->extend('Drupal\Core\Database\Query\PagerSelectExtender')
-        ->fields('p')
-        ->orderBy('p.pid', 'DESC')
-        ->limit(20)
-        ->execute()
-        ->fetchAll();
+      ->extend('Drupal\Core\Database\Query\PagerSelectExtender')
+      ->fields('p')
+      ->orderBy('p.pid', 'DESC')
+      ->limit(20)
+      ->execute()
+      ->fetchAll();
 
     return $results;
   }

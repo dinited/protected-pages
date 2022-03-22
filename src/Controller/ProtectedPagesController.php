@@ -1,18 +1,13 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\protected_pages\Controller\ProtectedPagesController.
- */
-
 namespace Drupal\protected_pages\Controller;
 
-use Drupal\protected_pages\ProtectedPagesStorage;
-use Drupal\Core\Controller\ControllerBase;
 use Drupal\Component\Utility\Html;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Url;
+use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Url;
+use Drupal\protected_pages\ProtectedPagesStorage;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Controller for listing protected pages.
@@ -51,7 +46,8 @@ class ProtectedPagesController extends ControllerBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-        $container->get('renderer'), $container->get('protected_pages.storage')
+      $container->get('renderer'),
+      $container->get('protected_pages.storage')
     );
   }
 
@@ -66,7 +62,11 @@ class ProtectedPagesController extends ControllerBase {
     ];
 
     $rows = [];
-    $headers = [t('#'), t('Relative Path'), t('Operations')];
+    $headers = [
+      $this->t('#'),
+      $this->t('Relative Path'),
+      $this->t('Operations'),
+    ];
     $count = 1;
     $result = $this->protectedPagesStorage->loadAllProtectedPages();
     foreach ($result as $page) {
@@ -80,7 +80,7 @@ class ProtectedPagesController extends ControllerBase {
               'url' => Url::fromUri('internal:/admin/config/system/protected_pages/' . $page->pid . '/edit'),
             ],
             'delete-protected-page' => [
-              'title' => $this->t('Delete'),
+              'title' => $this->t('Remove Password'),
               'url' => Url::fromUri('internal:/admin/config/system/protected_pages/' . $page->pid . '/delete'),
             ],
             'send-email' => [
@@ -106,7 +106,7 @@ class ProtectedPagesController extends ControllerBase {
       '#type' => 'table',
       '#header' => $headers,
       '#rows' => $rows,
-      '#empty' => t('No records available.'),
+      '#empty' => $this->t('No records available.'),
     ];
     $content['pager'] = ['#type' => 'pager'];
 

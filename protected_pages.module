@@ -10,8 +10,9 @@
  */
 
 use Drupal\Component\Utility\Html;
-use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\Core\StreamWrapper\StreamWrapperManager;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Implements hook_mail().
@@ -23,12 +24,12 @@ function protected_pages_mail($key, &$message, $params) {
     case 'protected_pages_details_mail':
 
       $tokens = ['[protected-page-url]', '[site-name]'];
-      $replcements = [
+      $replacements = [
         $params['protected_page_url'],
         \Drupal::config('system.site')->get('name'),
       ];
 
-      $body = str_replace($tokens, $replcements, $params['body']);
+      $body = str_replace($tokens, $replacements, $params['body']);
 
       $subject = $params['subject'];
       $message['subject'] = Html::escape($subject);
@@ -47,7 +48,7 @@ function protected_pages_file_download($uri) {
     return;
   }
 
-  $target = file_uri_target($uri);
+  $target = StreamWrapperManager::getTarget($uri);
   $file_path = '/system/files/' . $target;
 
   $fields = ['pid'];
@@ -75,8 +76,7 @@ function protected_pages_file_download($uri) {
     $destination_path_array = \Drupal::destination()->getAsArray();
     $destination_path_array['destination'] = $destination_path_array['destination'] . '/' . $target;
     $destination_path_array['protected_page'] = $pid;
-    $response = new RedirectResponse(Url::fromUri('internal:/protected-page', ['query' => $destination_path_array])
-            ->toString());
+    $response = new RedirectResponse(Url::fromUri('internal:/protected-page', ['query' => $destination_path_array])->toString());
     $response->send();
     return;
   }

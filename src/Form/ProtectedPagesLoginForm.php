@@ -1,19 +1,16 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\protected_pages\Form\ProtectedPagesLoginForm.
- */
-
 namespace Drupal\protected_pages\Form;
 
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\protected_pages\ProtectedPagesStorage;
 use Drupal\Core\Password\PasswordInterface;
-use Drupal\Core\Access\AccessResult;
-use Drupal\Component\Utility\Html;
+use Drupal\Core\Session\AccountProxy;
+use Drupal\protected_pages\ProtectedPagesStorage;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides login screen to access protected page.
@@ -35,15 +32,36 @@ class ProtectedPagesLoginForm extends FormBase {
   protected $password;
 
   /**
+   * Account proxy service.
+   *
+   * @var \Drupal\Core\Session\AccountProxy
+   */
+  protected $currentUser;
+
+  /**
+   * A date time instance.
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected $time;
+
+  /**
    * Constructs a new ProtectedPagesLoginForm.
    *
    * @param \Drupal\Core\Password\PasswordInterface $password
    *   The password hashing service.
+   * @param \Drupal\protected_pages\ProtectedPagesStorage $protectedPagesStorage
+   *   The protected pages storage.
+   * @param \Drupal\Core\Session\AccountProxy $currentUser
+   *   The current user service.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   A date time instance.
    */
-  public function __construct(PasswordInterface $password, ProtectedPagesStorage $protectedPagesStorage) {
-
+  public function __construct(PasswordInterface $password, ProtectedPagesStorage $protectedPagesStorage, AccountProxy $currentUser, TimeInterface $time) {
     $this->password = $password;
     $this->protectedPagesStorage = $protectedPagesStorage;
+    $this->currentUser = $currentUser;
+    $this->time = $time;
   }
 
   /**
@@ -51,7 +69,10 @@ class ProtectedPagesLoginForm extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-        $container->get('password'), $container->get('protected_pages.storage')
+      $container->get('password'),
+      $container->get('protected_pages.storage'),
+      $container->get('current_user'),
+      $container->get('datetime.time')
     );
   }
 
@@ -69,11 +90,9 @@ class ProtectedPagesLoginForm extends FormBase {
    *   The access result.
    */
   public function accessProtectedPageLoginScreen() {
-    $account = \Drupal::currentUser();
-
     $param_protected_page = $this->getRequest()->query->get('protected_page');
     $param_exists = (isset($param_protected_page) && is_numeric($param_protected_page));
-    return AccessResult::allowedIf(($account->hasPermission('access protected page password screen') || ($account->id() == 1)) && $param_exists);
+    return AccessResult::allowedIf(($this->currentUser->hasPermission('access protected page password screen') || ($this->currentUser->id() == 1)) && $param_exists);
   }
 
   /**
@@ -92,11 +111,11 @@ class ProtectedPagesLoginForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('protected_pages.settings');
-    $form = [];
 
     $form['protected_page_enter_password'] = [
       '#type' => 'fieldset',
       '#collapsible' => FALSE,
+      '#title' => $config->get('others.protected_pages_password_fieldset_legend'),
     ];
 
     $form['protected_page_enter_password']['protected_page_pid'] = [
@@ -141,7 +160,6 @@ class ProtectedPagesLoginForm extends FormBase {
       $password = $this->protectedPagesStorage->loadProtectedPage($fields, $conditions, TRUE);
 
       if (!$this->password->check($form_state->getValue('password'), $password)) {
-
         $form_state->setErrorByName('password', $config->get('others.protected_pages_incorrect_password_msg'));
       }
     }
@@ -156,8 +174,8 @@ class ProtectedPagesLoginForm extends FormBase {
 
       $password = $this->protectedPagesStorage->loadProtectedPage($fields, $conditions, TRUE);
       $global_password = $config->get('password.protected_pages_global_password');
-      if (!$this->password->check($form_state->getValue('password'), $password) && !$this->password->check($form_state->getValue('password'), $global_password)) {
 
+      if (!$this->password->check($form_state->getValue('password'), $password) && !$this->password->check($form_state->getValue('password'), $global_password)) {
         $form_state->setErrorByName('password', $config->get('others.protected_pages_incorrect_password_msg'));
       }
     }
@@ -175,7 +193,7 @@ class ProtectedPagesLoginForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = $this->config('protected_pages.settings');
-    $_SESSION['_protected_page']['passwords'][$form_state->getValue('protected_page_pid')]['request_time'] = REQUEST_TIME;
+    $_SESSION['_protected_page']['passwords'][$form_state->getValue('protected_page_pid')]['request_time'] = $this->time->getRequestTime();
     $session_expire_time = $config->get('password.protected_pages_session_expire_time');
     if ($session_expire_time) {
       $_SESSION['_protected_page']['passwords'][$form_state->getValue('protected_page_pid')]['expire_time'] = strtotime("+{$session_expire_time} minutes");

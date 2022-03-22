@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\protected_pages\Functional;
 
-use Drupal\Tests\BrowserTestBase;
 use Drupal\node\Entity\Node;
+use Drupal\Tests\BrowserTestBase;
 
 /**
  * Provides functional Drupal tests for access to protected pages and config.
@@ -35,9 +35,7 @@ class ProtectedPagesAccess extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
-    parent::setUp();
-  }
+  protected $defaultTheme = 'stark';
 
   /**
    * Test access to a Protected Page.
@@ -46,11 +44,11 @@ class ProtectedPagesAccess extends BrowserTestBase {
     // Create a node.
     $this->drupalCreateContentType(['type' => 'page']);
     $node = $this->drupalCreateNode();
-    $this->assertTrue(Node::load($node->id()), 'Node created.');
+    $this->assertNotEmpty(Node::load($node->id()), 'Node created.');
 
     // Protect created node.
     $page_data = [
-      'password' => 'test_pass',
+      'password' => bin2hex(random_bytes(9)),
       'path' => '/node/' . $node->id(),
     ];
     $storage = \Drupal::service('protected_pages.storage');
